@@ -1,0 +1,11 @@
+  spring:
+    datasource:
+      url: jdbc:postgresql://localhost:5433/gleproddb_vodafone?currentSchema=gle_prod_config,gle_prod_data
+      username: db_user
+      password: P@ssw0rd
+      driver-class-name: org.postgresql.Driver
+    jpa:
+      database-platform: org.hibernate.dialect.PostgreSQLDialect
+      hibernate:
+        ddl-auto: validate
+      show-sql: true

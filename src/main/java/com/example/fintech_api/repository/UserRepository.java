@@ -8,6 +8,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    @Query(value = "SELECT * FROM users WHERE login_id_1 = :loginId", nativeQuery = true)
+    @Query(value = "SELECT * FROM gle_prod_config.users WHERE login_id_1 = :loginId", nativeQuery = true)
     List<User> findByLoginId(@Param("loginId") String loginId);
 }

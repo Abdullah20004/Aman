@@ -16,6 +16,8 @@ import com.example.fintech_api.model.User;
 import com.example.fintech_api.service.SessionService;
 import com.example.fintech_api.service.StatusCodeService;
 import com.example.fintech_api.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,11 +25,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api")
 public class FintechController {
+    private static final Logger logger = LoggerFactory.getLogger(FintechController.class);
     @Autowired
     private UserService userService;
     @Autowired
@@ -59,7 +61,10 @@ public class FintechController {
     public List<PidDto> getPids(@RequestParam String usename,
                                 @RequestParam String clientAddr,
                                 @RequestParam String state) {
-        return sessionService.getPidsByUserAndClient(usename, clientAddr, state);
+        logger.info("Fetching PIDs for usename: {}, clientAddr: {}, state: {}", usename, clientAddr, state);
+        List<PidDto> pids = sessionService.getPidsByUserAndClient(usename, clientAddr, state);
+        logger.info("Found {} PIDs", pids.size());
+        return pids;
     }
 
     @GetMapping("/transaction-server-summary")
@@ -68,52 +73,61 @@ public class FintechController {
     }
 
     @GetMapping("/transaction-server-summary-two")
-    public CompletableFuture<List<TransactionServerSummaryTwoDto>> getTransactionServerSummaryTwo(@RequestParam String usename) {
+    public List<TransactionServerSummaryTwoDto> getTransactionServerSummaryTwo(@RequestParam String usename) {
         return sessionService.getTransactionServerSummaryTwo(usename);
     }
 
     @GetMapping("/ambiguous-transaction-count")
-    public CompletableFuture<List<AmbiguousTransactionCountDto>> getAmbiguousTransactionCount() {
-        return sessionService.getAmbiguousTransactionCount();
+    public List<AmbiguousTransactionCountDto> getAmbiguousTransactionCount(
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate) {
+        return sessionService.getAmbiguousTransactionCount(startDate, endDate);
     }
 
     @GetMapping("/ambiguous-by-service-category")
-    public CompletableFuture<List<AmbiguousByServiceCategoryDto>> getAmbiguousByServiceCategory() {
-        return sessionService.getAmbiguousByServiceCategory();
+    public List<AmbiguousByServiceCategoryDto> getAmbiguousByServiceCategory(
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate) {
+        return sessionService.getAmbiguousByServiceCategory(startDate, endDate);
     }
 
     @GetMapping("/ambiguous-by-service-category-status")
-    public CompletableFuture<List<AmbiguousByServiceCategoryStatusDto>> getAmbiguousByServiceCategoryStatus() {
-        return sessionService.getAmbiguousByServiceCategoryStatus();
+    public List<AmbiguousByServiceCategoryStatusDto> getAmbiguousByServiceCategoryStatus(
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate) {
+        return sessionService.getAmbiguousByServiceCategoryStatus(startDate, endDate);
     }
 
     @GetMapping("/system-exceptions")
-    public CompletableFuture<List<SystemExceptionDto>> getSystemExceptions() {
-        return sessionService.getSystemExceptions();
+    public List<SystemExceptionDto> getSystemExceptions(
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate) {
+        return sessionService.getSystemExceptions(startDate, endDate);
     }
 
     @GetMapping("/closing-balances")
-    public CompletableFuture<List<BalanceDto>> getClosingBalances() {
-        return sessionService.getClosingBalances();
+    public List<BalanceDto> getClosingBalances(
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate) {
+        return sessionService.getClosingBalances(startDate, endDate);
     }
 
     @GetMapping("/opening-balances")
-    public CompletableFuture<List<BalanceDto>> getOpeningBalances() {
-        return sessionService.getOpeningBalances();
+    public List<BalanceDto> getOpeningBalances(
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate) {
+        return sessionService.getOpeningBalances(startDate, endDate);
     }
 
     @GetMapping("/processor-status")
-    public CompletableFuture<List<ProcessorStatusDto>> getProcessorStatus() {
+    public List<ProcessorStatusDto> getProcessorStatus() {
         return sessionService.getProcessorStatus();
     }
 
     @GetMapping("/automated-transaction-status")
-    public CompletableFuture<List<AutomatedTransactionStatusDto>> getAutomatedTransactionStatus() {
-        return sessionService.getAutomatedTransactionStatus();
-    }
-
-    @GetMapping("/partition-status")
-    public CompletableFuture<String> getPartitionStatus() {
-        return sessionService.getPartitionStatus();
+    public List<AutomatedTransactionStatusDto> getAutomatedTransactionStatus(
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate) {
+        return sessionService.getAutomatedTransactionStatus(startDate, endDate);
     }
 }

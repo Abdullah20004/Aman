@@ -13,227 +13,72 @@ import com.example.fintech_api.dto.ProcessorStatusDto;
 import com.example.fintech_api.dto.AutomatedTransactionStatusDto;
 import com.example.fintech_api.repository.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @Service
-@EnableAsync
 public class SessionService {
+    private final SessionRepository sessionRepository;
+
     @Autowired
-    private SessionRepository sessionRepository;
+    public SessionService(SessionRepository sessionRepository) {
+        this.sessionRepository = sessionRepository;
+    }
 
     public List<SessionCountDto> getSessionCounts() {
-        List<Object[]> results = sessionRepository.findSessionCounts();
-        return results.stream().map(result -> {
-            SessionCountDto dto = new SessionCountDto();
-            dto.setUsename(Objects.toString(result[0], null));
-            dto.setClientAddr(Objects.toString(result[1], null));
-            dto.setState(Objects.toString(result[2], null));
-            dto.setSessionsCount(result[3] instanceof Number ? ((Number) result[3]).longValue() : 0L);
-            return dto;
-        }).collect(Collectors.toList());
+        return sessionRepository.findSessionCounts();
     }
 
     public List<SessionCountDto> getSessionCountsWithAppName() {
-        List<Object[]> results = sessionRepository.findSessionCountsWithAppName();
-        return results.stream().map(result -> {
-            SessionCountDto dto = new SessionCountDto();
-            dto.setUsename(Objects.toString(result[0], null));
-            dto.setClientAddr(Objects.toString(result[1], null));
-            dto.setState(Objects.toString(result[2], null));
-            dto.setApplicationName(Objects.toString(result[3], null));
-            dto.setSessionsCount(result[4] instanceof Number ? ((Number) result[4]).longValue() : 0L);
-            return dto;
-        }).collect(Collectors.toList());
+        return sessionRepository.findSessionCountsWithAppName();
     }
 
     public List<PidDto> getPidsByUserAndClient(String usename, String clientAddr, String state) {
-        List<Object[]> results = sessionRepository.findPidsByUserAndClient(usename, clientAddr, state);
-        return results.stream().map(result -> {
-            PidDto dto = new PidDto();
-            dto.setPid(result[0] instanceof Number ? ((Number) result[0]).longValue() : 0L);
-            return dto;
-        }).collect(Collectors.toList());
+        return sessionRepository.findPidsByUserAndClient(usename, clientAddr, state);
     }
 
     public List<TransactionServerSummaryDto> getTransactionServerSummary(String usename) {
-        List<Object[]> results = sessionRepository.findTransactionServerSummary(usename);
-        return results.stream().map(result -> {
-            TransactionServerSummaryDto dto = new TransactionServerSummaryDto();
-            dto.setUsename(Objects.toString(result[0], null));
-            dto.setTxn1Ideal(result[1] instanceof Number ? ((Number) result[1]).longValue() : 0L);
-            dto.setTxn2Ideal(result[2] instanceof Number ? ((Number) result[2]).longValue() : 0L);
-            dto.setTxn3Ideal(result[3] instanceof Number ? ((Number) result[3]).longValue() : 0L);
-            dto.setTxn1Active(result[4] instanceof Number ? ((Number) result[4]).longValue() : 0L);
-            dto.setTxn2Active(result[5] instanceof Number ? ((Number) result[5]).longValue() : 0L);
-            dto.setTxn3Active(result[6] instanceof Number ? ((Number) result[6]).longValue() : 0L);
-            return dto;
-        }).collect(Collectors.toList());
+        return sessionRepository.findTransactionServerSummary(usename);
     }
 
-    @Async
-    public CompletableFuture<List<TransactionServerSummaryTwoDto>> getTransactionServerSummaryTwo(String usename) {
-        List<Object[]> results = sessionRepository.findTransactionServerSummaryTwo(usename);
-        List<TransactionServerSummaryTwoDto> dtos = results.stream().map(result -> {
-            TransactionServerSummaryTwoDto dto = new TransactionServerSummaryTwoDto();
-            dto.setUsename(Objects.toString(result[0], null));
-            dto.setTxn1Ideal(result[1] instanceof Number ? ((Number) result[1]).longValue() : 0L);
-            dto.setTxn2Ideal(result[2] instanceof Number ? ((Number) result[2]).longValue() : 0L);
-            dto.setTxn1Active(result[3] instanceof Number ? ((Number) result[3]).longValue() : 0L);
-            dto.setTxn2Active(result[4] instanceof Number ? ((Number) result[4]).longValue() : 0L);
-            return dto;
-        }).collect(Collectors.toList());
-        return CompletableFuture.completedFuture(dtos);
+    public List<TransactionServerSummaryTwoDto> getTransactionServerSummaryTwo(String usename) {
+        return sessionRepository.findTransactionServerSummaryTwo(usename);
     }
 
-    @Async
-    public CompletableFuture<List<AmbiguousTransactionCountDto>> getAmbiguousTransactionCount() {
-        String timestamp = sessionRepository.getTimestampLastFiveMinutes();
-        List<Object[]> results = sessionRepository.findAmbiguousTransactionCount(timestamp);
-        List<AmbiguousTransactionCountDto> dtos = results.stream().map(result -> {
-            AmbiguousTransactionCountDto dto = new AmbiguousTransactionCountDto();
-            dto.setServiceTransactionType(Objects.toString(result[0], null));
-            dto.setIsAmbiguous(result[1] instanceof Number ? ((Number) result[1]).longValue() : 0L);
-            dto.setNotAmbiguous(result[2] instanceof Number ? ((Number) result[2]).longValue() : 0L);
-            return dto;
-        }).collect(Collectors.toList());
-        return CompletableFuture.completedFuture(dtos);
+    public String getTimestampLastFiveMinutes() {
+        return sessionRepository.getTimestampLastFiveMinutes();
     }
 
-    @Async
-    public CompletableFuture<List<AmbiguousByServiceCategoryDto>> getAmbiguousByServiceCategory() {
-        String timestamp = sessionRepository.getTimestampLastFiveMinutes();
-        List<Object[]> results = sessionRepository.findAmbiguousByServiceCategory(timestamp);
-        List<AmbiguousByServiceCategoryDto> dtos = results.stream().map(result -> {
-            AmbiguousByServiceCategoryDto dto = new AmbiguousByServiceCategoryDto();
-            dto.setAmbiguousFlag(Objects.toString(result[0], null));
-            dto.setServiceCategory(Objects.toString(result[1], null));
-            dto.setCount(result[2] instanceof Number ? ((Number) result[2]).longValue() : 0L);
-            return dto;
-        }).collect(Collectors.toList());
-        return CompletableFuture.completedFuture(dtos);
+    public List<AmbiguousTransactionCountDto> getAmbiguousTransactionCount(String startDate, String endDate) {
+        return sessionRepository.findAmbiguousTransactionCount(startDate, endDate);
     }
 
-    @Async
-    public CompletableFuture<List<AmbiguousByServiceCategoryStatusDto>> getAmbiguousByServiceCategoryStatus() {
-        String timestamp = sessionRepository.getTimestampLastFiveMinutes();
-        List<Object[]> results = sessionRepository.findAmbiguousByServiceCategoryStatus(timestamp);
-        List<AmbiguousByServiceCategoryStatusDto> dtos = results.stream().map(result -> {
-            AmbiguousByServiceCategoryStatusDto dto = new AmbiguousByServiceCategoryStatusDto();
-            dto.setAmbiguousFlag(Objects.toString(result[0], null));
-            dto.setServiceCategory(Objects.toString(result[1], null));
-            dto.setSuccessCount(result[2] instanceof Number ? ((Number) result[2]).longValue() : 0L);
-            dto.setFailedCount(result[3] instanceof Number ? ((Number) result[3]).longValue() : 0L);
-            return dto;
-        }).collect(Collectors.toList());
-        return CompletableFuture.completedFuture(dtos);
+    public List<AmbiguousByServiceCategoryDto> getAmbiguousByServiceCategory(String startDate, String endDate) {
+        return sessionRepository.findAmbiguousByServiceCategory(startDate, endDate);
     }
 
-    @Async
-    public CompletableFuture<List<SystemExceptionDto>> getSystemExceptions() {
-        List<Object[]> results = sessionRepository.findSystemExceptions();
-        List<SystemExceptionDto> dtos = results.stream().map(result -> {
-            SystemExceptionDto dto = new SystemExceptionDto();
-            dto.setExceptionDate(result[0] instanceof java.sql.Date ? ((java.sql.Date) result[0]).toLocalDate() : null);
-            dto.setModuleName(Objects.toString(result[1], null));
-            dto.setExceptionMessage(Objects.toString(result[2], null));
-            dto.setTxnCount(result[3] instanceof Number ? ((Number) result[3]).longValue() : 0L);
-            dto.setFromTime(result[4] instanceof java.sql.Timestamp ? ((java.sql.Timestamp) result[4]).toLocalDateTime() : null);
-            dto.setToTime(result[5] instanceof java.sql.Timestamp ? ((java.sql.Timestamp) result[5]).toLocalDateTime() : null);
-            return dto;
-        }).collect(Collectors.toList());
-        return CompletableFuture.completedFuture(dtos);
+    public List<AmbiguousByServiceCategoryStatusDto> getAmbiguousByServiceCategoryStatus(String startDate, String endDate) {
+        return sessionRepository.findAmbiguousByServiceCategoryStatus(startDate, endDate);
     }
 
-    @Async
-    public CompletableFuture<List<BalanceDto>> getClosingBalances() {
-        List<Object[]> results = sessionRepository.findClosingBalances();
-        List<BalanceDto> dtos = results.stream().map(result -> {
-            BalanceDto dto = new BalanceDto();
-            dto.setDataType(Objects.toString(result[0], null));
-            dto.setBalanceDay(result[1] instanceof java.sql.Date ? ((java.sql.Date) result[1]).toLocalDate() : null);
-            dto.setTxnCount(result[2] instanceof Number ? ((Number) result[2]).longValue() : 0L);
-            dto.setFromTime(result[3] instanceof java.sql.Timestamp ? ((java.sql.Timestamp) result[3]).toLocalDateTime() : null);
-            dto.setToTime(result[4] instanceof java.sql.Timestamp ? ((java.sql.Timestamp) result[4]).toLocalDateTime() : null);
-            dto.setExecutionTime(result[5] instanceof Number ? ((Number) result[5]).longValue() : 0L);
-            return dto;
-        }).collect(Collectors.toList());
-        return CompletableFuture.completedFuture(dtos);
+    public List<SystemExceptionDto> getSystemExceptions(String startDate, String endDate) {
+        return sessionRepository.findSystemExceptions(startDate, endDate);
     }
 
-    @Async
-    public CompletableFuture<List<BalanceDto>> getOpeningBalances() {
-        List<Object[]> results = sessionRepository.findOpeningBalances();
-        List<BalanceDto> dtos = results.stream().map(result -> {
-            BalanceDto dto = new BalanceDto();
-            dto.setDataType(Objects.toString(result[0], null));
-            dto.setBalanceDay(result[1] instanceof java.sql.Date ? ((java.sql.Date) result[1]).toLocalDate() : null);
-            dto.setTxnCount(result[2] instanceof Number ? ((Number) result[2]).longValue() : 0L);
-            dto.setFromTime(result[3] instanceof java.sql.Timestamp ? ((java.sql.Timestamp) result[3]).toLocalDateTime() : null);
-            dto.setToTime(result[4] instanceof java.sql.Timestamp ? ((java.sql.Timestamp) result[4]).toLocalDateTime() : null);
-            dto.setExecutionTime(result[5] instanceof Number ? ((Number) result[5]).longValue() : 0L);
-            return dto;
-        }).collect(Collectors.toList());
-        return CompletableFuture.completedFuture(dtos);
+    public List<BalanceDto> getClosingBalances(String startDate, String endDate) {
+        return sessionRepository.findClosingBalances(startDate, endDate);
     }
 
-    @Async
-    public CompletableFuture<List<ProcessorStatusDto>> getProcessorStatus() {
-        List<Object[]> results = sessionRepository.findProcessorStatus();
-        List<ProcessorStatusDto> dtos = results.stream().map(result -> {
-            ProcessorStatusDto dto = new ProcessorStatusDto();
-            dto.setProcessorId(Objects.toString(result[0], null));
-            dto.setProcessorRunningStatus(Objects.toString(result[1], null));
-            dto.setLastRun(result[2] instanceof java.sql.Timestamp ? ((java.sql.Timestamp) result[2]).toLocalDateTime() : null);
-            dto.setTransactionsCount(result[3] instanceof Number ? ((Number) result[3]).longValue() : 0L);
-            dto.setLastRunSinceSeconds(result[4] instanceof Number ? ((Number) result[4]).longValue() : 0L);
-            dto.setNextRunInSeconds(result[5] instanceof Number ? ((Number) result[5]).longValue() : 0L);
-            return dto;
-        }).collect(Collectors.toList());
-        return CompletableFuture.completedFuture(dtos);
+    public List<BalanceDto> getOpeningBalances(String startDate, String endDate) {
+        return sessionRepository.findOpeningBalances(startDate, endDate);
     }
 
-    @Async
-    public CompletableFuture<List<AutomatedTransactionStatusDto>> getAutomatedTransactionStatus() {
-        List<Object[]> results = sessionRepository.findAutomatedTransactionStatus();
-        List<AutomatedTransactionStatusDto> dtos = results.stream().map(result -> {
-            AutomatedTransactionStatusDto dto = new AutomatedTransactionStatusDto();
-            dto.setDbDate(result[0] instanceof java.sql.Date ? ((java.sql.Date) result[0]).toLocalDate() : null);
-            dto.setServiceCode(Objects.toString(result[1], null));
-            dto.setAtStatus(Objects.toString(result[2], null));
-            dto.setTransactionStatus(Objects.toString(result[3], null));
-            dto.setUserACount(result[4] instanceof Number ? ((Number) result[4]).longValue() : 0L);
-            dto.setUserBCount(result[5] instanceof Number ? ((Number) result[5]).longValue() : 0L);
-            dto.setTotalValue(result[6] instanceof Number ? ((Number) result[6]).doubleValue() : 0.0);
-            dto.setTxnCount(result[7] instanceof Number ? ((Number) result[7]).longValue() : 0L);
-            dto.setFromTime(result[8] instanceof java.sql.Timestamp ? ((java.sql.Timestamp) result[8]).toLocalDateTime() : null);
-            dto.setToTime(result[9] instanceof java.sql.Timestamp ? ((java.sql.Timestamp) result[9]).toLocalDateTime() : null);
-            return dto;
-        }).collect(Collectors.toList());
-        return CompletableFuture.completedFuture(dtos);
+    public List<ProcessorStatusDto> getProcessorStatus() {
+        return sessionRepository.findProcessorStatus();
     }
 
-    @Async
-    public CompletableFuture<String> getPartitionStatus() {
-        // Placeholder logic: Return expected string for the next 3 days
-        LocalDate today = LocalDate.now();
-        StringBuilder result = new StringBuilder();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-        for (int i = 1; i <= 3; i++) {
-            result.append("All tables are fine for ").append(today.plusDays(i).format(formatter));
-            if (i < 3) {
-                result.append("; ");
-            }
-        }
-        return CompletableFuture.completedFuture(result.toString());
+    public List<AutomatedTransactionStatusDto> getAutomatedTransactionStatus(String startDate, String endDate) {
+        return sessionRepository.findAutomatedTransactionStatus(startDate, endDate);
     }
 }

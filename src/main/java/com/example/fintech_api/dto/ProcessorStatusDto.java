@@ -2,13 +2,13 @@ package com.example.fintech_api.dto;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 @Data
 public class ProcessorStatusDto {
     private String processorId;
     private String processorRunningStatus;
-    private LocalDateTime lastRun;
+    private Timestamp lastRun;
     private Long transactionsCount;
     private Long lastRunSinceSeconds;
     private Long nextRunInSeconds;

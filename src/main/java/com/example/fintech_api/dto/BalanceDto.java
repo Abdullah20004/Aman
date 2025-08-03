@@ -2,15 +2,15 @@ package com.example.fintech_api.dto;
 
 import lombok.Data;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.sql.Date;
+import java.sql.Timestamp;
 
 @Data
 public class BalanceDto {
     private String dataType;
-    private LocalDate balanceDay;
+    private Date balanceDay;
     private Long txnCount;
-    private LocalDateTime fromTime;
-    private LocalDateTime toTime;
-    private Long executionTime;
+    private Timestamp fromTime;
+    private Timestamp toTime;
+    private String executionTime;
 }

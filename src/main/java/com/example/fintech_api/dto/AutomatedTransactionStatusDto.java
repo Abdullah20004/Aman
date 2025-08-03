@@ -2,12 +2,12 @@ package com.example.fintech_api.dto;
 
 import lombok.Data;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.sql.Date;
+import java.sql.Timestamp;
 
 @Data
 public class AutomatedTransactionStatusDto {
-    private LocalDate dbDate;
+    private Date dbDate;
     private String serviceCode;
     private String atStatus;
     private String transactionStatus;
@@ -15,6 +15,6 @@ public class AutomatedTransactionStatusDto {
     private Long userBCount;
     private Double totalValue;
     private Long txnCount;
-    private LocalDateTime fromTime;
-    private LocalDateTime toTime;
+    private Timestamp fromTime;
+    private Timestamp toTime;
 }

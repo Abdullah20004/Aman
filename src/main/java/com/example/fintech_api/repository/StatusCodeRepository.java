@@ -8,6 +8,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface StatusCodeRepository extends JpaRepository<StatusCode, String> {
-    @Query(value = "SELECT * FROM status_codes WHERE status_code ILIKE :pattern", nativeQuery = true)
+    @Query(value = "SELECT * FROM gle_prod_config.status_codes WHERE status_code ILIKE :pattern", nativeQuery = true)
     List<StatusCode> findByStatusCodePattern(@Param("pattern") String pattern);
 }

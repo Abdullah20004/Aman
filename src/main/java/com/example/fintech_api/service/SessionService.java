@@ -1,84 +1,98 @@
 package com.example.fintech_api.service;
 
-import com.example.fintech_api.dto.PidDto;
-import com.example.fintech_api.dto.SessionCountDto;
-import com.example.fintech_api.dto.TransactionServerSummaryDto;
-import com.example.fintech_api.dto.TransactionServerSummaryTwoDto;
-import com.example.fintech_api.dto.AmbiguousTransactionCountDto;
-import com.example.fintech_api.dto.AmbiguousByServiceCategoryDto;
-import com.example.fintech_api.dto.AmbiguousByServiceCategoryStatusDto;
-import com.example.fintech_api.dto.SystemExceptionDto;
-import com.example.fintech_api.dto.BalanceDto;
-import com.example.fintech_api.dto.ProcessorStatusDto;
-import com.example.fintech_api.dto.AutomatedTransactionStatusDto;
+import com.example.fintech_api.dto.StoredQueryDto;
+import com.example.fintech_api.model.StoredQuery;
 import com.example.fintech_api.repository.SessionRepository;
+import com.example.fintech_api.repository.StoredQueryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 public class SessionService {
-    private final SessionRepository sessionRepository;
+    private final StoredQueryRepository storedQueryRepository;
+    private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final GeminiService geminiService;
 
     @Autowired
-    public SessionService(SessionRepository sessionRepository) {
-        this.sessionRepository = sessionRepository;
+    public SessionService(StoredQueryRepository storedQueryRepository,
+                          NamedParameterJdbcTemplate jdbcTemplate,
+                          GeminiService geminiService) {
+        this.storedQueryRepository = storedQueryRepository;
+        this.jdbcTemplate = jdbcTemplate;
+        this.geminiService = geminiService;
     }
 
-    public List<SessionCountDto> getSessionCounts() {
-        return sessionRepository.findSessionCounts();
+    @Transactional
+    public StoredQueryDto createStoredQuery(StoredQueryDto dto) throws Exception {
+        if (dto.getQueryName() == null || dto.getQueryName().isEmpty()) {
+            throw new IllegalArgumentException("Query name is required");
+        }
+        if (dto.getDescription() == null || dto.getDescription().isEmpty()) {
+            throw new IllegalArgumentException("Description is required");
+        }
+
+        StoredQuery query = new StoredQuery();
+        query.setQueryCode(UUID.randomUUID().toString());
+        query.setQueryName(dto.getQueryName());
+        query.setDescription(dto.getDescription());
+        query.setIsEnabled(true);
+        query.setCreatedOn(LocalDateTime.now());
+
+        String sqlCode = dto.getSqlCode();
+        if (sqlCode == null || sqlCode.isEmpty()) {
+            sqlCode = geminiService.generateSqlFromDescription(dto.getDescription());
+        }
+        validateSql(sqlCode);
+        query.setSqlCode(sqlCode);
+
+        StoredQuery savedQuery = storedQueryRepository.save(query);
+        StoredQueryDto result = new StoredQueryDto();
+        result.setId(savedQuery.getId());
+        result.setQueryCode(savedQuery.getQueryCode());
+        result.setQueryName(savedQuery.getQueryName());
+        result.setDescription(savedQuery.getDescription());
+        result.setSqlCode(savedQuery.getSqlCode());
+        result.setIsEnabled(savedQuery.getIsEnabled());
+        return result;
     }
 
-    public List<SessionCountDto> getSessionCountsWithAppName() {
-        return sessionRepository.findSessionCountsWithAppName();
+    @Transactional
+    public StoredQueryDto toggleQueryStatus(String queryCode, boolean isEnabled) {
+        StoredQuery query = storedQueryRepository.findByQueryCode(queryCode)
+                .orElseThrow(() -> new IllegalArgumentException("Query not found: " + queryCode));
+        query.setIsEnabled(isEnabled);
+        StoredQuery savedQuery = storedQueryRepository.save(query);
+
+        StoredQueryDto result = new StoredQueryDto();
+        result.setId(savedQuery.getId());
+        result.setQueryCode(savedQuery.getQueryCode());
+        result.setQueryName(savedQuery.getQueryName());
+        result.setDescription(savedQuery.getDescription());
+        result.setSqlCode(savedQuery.getSqlCode());
+        result.setIsEnabled(savedQuery.getIsEnabled());
+        return result;
     }
 
-    public List<PidDto> getPidsByUserAndClient(String usename, String clientAddr, String state) {
-        return sessionRepository.findPidsByUserAndClient(usename, clientAddr, state);
+    public List<Map<String, Object>> executeStoredQuery(String queryCode, Map<String, Object> params) {
+        StoredQuery query = storedQueryRepository.findByQueryCodeAndEnabled(queryCode)
+                .orElseThrow(() -> new IllegalArgumentException("Query not found or disabled: " + queryCode));
+        validateSql(query.getSqlCode());
+        return jdbcTemplate.queryForList(query.getSqlCode(), params);
     }
 
-    public List<TransactionServerSummaryDto> getTransactionServerSummary(String usename) {
-        return sessionRepository.findTransactionServerSummary(usename);
-    }
-
-    public List<TransactionServerSummaryTwoDto> getTransactionServerSummaryTwo(String usename) {
-        return sessionRepository.findTransactionServerSummaryTwo(usename);
-    }
-
-    public String getTimestampLastFiveMinutes() {
-        return sessionRepository.getTimestampLastFiveMinutes();
-    }
-
-    public List<AmbiguousTransactionCountDto> getAmbiguousTransactionCount(String startDate, String endDate) {
-        return sessionRepository.findAmbiguousTransactionCount(startDate, endDate);
-    }
-
-    public List<AmbiguousByServiceCategoryDto> getAmbiguousByServiceCategory(String startDate, String endDate) {
-        return sessionRepository.findAmbiguousByServiceCategory(startDate, endDate);
-    }
-
-    public List<AmbiguousByServiceCategoryStatusDto> getAmbiguousByServiceCategoryStatus(String startDate, String endDate) {
-        return sessionRepository.findAmbiguousByServiceCategoryStatus(startDate, endDate);
-    }
-
-    public List<SystemExceptionDto> getSystemExceptions(String startDate, String endDate) {
-        return sessionRepository.findSystemExceptions(startDate, endDate);
-    }
-
-    public List<BalanceDto> getClosingBalances(String startDate, String endDate) {
-        return sessionRepository.findClosingBalances(startDate, endDate);
-    }
-
-    public List<BalanceDto> getOpeningBalances(String startDate, String endDate) {
-        return sessionRepository.findOpeningBalances(startDate, endDate);
-    }
-
-    public List<ProcessorStatusDto> getProcessorStatus() {
-        return sessionRepository.findProcessorStatus();
-    }
-
-    public List<AutomatedTransactionStatusDto> getAutomatedTransactionStatus(String startDate, String endDate) {
-        return sessionRepository.findAutomatedTransactionStatus(startDate, endDate);
+    private void validateSql(String sql) throws IllegalArgumentException {
+        String lowerSql = sql.toLowerCase().trim();
+        if (!lowerSql.startsWith("select")) {
+            throw new IllegalArgumentException("Only SELECT queries are allowed");
+        }
+        if (lowerSql.contains("insert") || lowerSql.contains("update") ||
+                lowerSql.contains("delete") || lowerSql.contains("drop")) {
+            throw new IllegalArgumentException("SQL query must be a SELECT statement");
+        }
     }
 }
